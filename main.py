@@ -1,60 +1,78 @@
-from bs4 import BeautifulSoup 
 import os 
+from bs4 import BeautifulSoup 
 from PorterStemmer import PorterStemmer
 import re
-import json 
 
 
+
+dict = {}
 
 def go():
 
-	f = open('stopwords.txt', 'r')
-	stopwords = f.read()
-	f.close()
-	stopwords = {stopwords}
-	print type(stopwords)
+	dataset = 'Dataset'	
 
-	dataset = 'Dataset'
-	tokens_dict = {}
-	inverted_index = {}
-
-	for file in os.listdir(dataset):
-		
-		tokens = []
-
+	for file in os.listdir(dataset):	
 		if file.endswith(".sgm"):
 			
-			f = open(os.path.join(dataset, file), 'r')
-			data = f.read()
-			f.close()
+			with open(os.path.join(dataset, file), 'r') as f:
+				data = f.read()
+
 			soup = BeautifulSoup(data, 'html.parser')
 
-
 			for news_article in soup.find_all('reuters'):
-				
-				news_id = news_article.get('newid')
+
+				news_id = int(news_article.get('newid'))
 				news_text = ''
 
 				if news_article.title:
 					news_text += news_article.title.string.lower()+'\n'				
 				if news_article.body:
 					news_text += news_article.body.string.lower()
+
+				tokenize(news_text, news_id)
 				
-				# [\w] means any alphanumeric characters [a-zA-Z0-9_]
-				word_list = re.sub("[^\w]", " ",  news_text).split()
+
+	create_index_files(dict)
 				
-				p = PorterStemmer()
-				for word in word_list:
-					if word not in stopwords:
-						token = p.stem(word,0,len(word)-1)
-						tokens.append(token.encode('utf8'))								
+
+				
+			
+def tokenize(news_text, news_id):
+	f = open('stopwords.txt', 'r')
+	stopwords = f.read()
+	f.close()
+	stopwords = {stopwords} # set for faster run 
+			
+	# [\w] means any alphanumeric characters [a-zA-Z0-9_]
+	word_list = re.sub("[^\w]", " ",  news_text).split()
+
+	for word in word_list:
+		if word not in stopwords:
+			token = stem(word)
+			if token in dict:
+				dict[token].append(news_id)
+			else:
+				dict[token] = [news_id]
 
 
-				f = open(os.path.join('test.txt'), 'a+')
-				#f.write(json.dumps(tokens_dict)+'\n')
-				f.close()
+def stem(word):
+	p = PorterStemmer()
+	return p.stem(word,0,len(word)-1).encode('utf8')
 
 
+def create_index_files(dict):
+	postings_list = {}
 
+	for i, key in enumerate(sorted(dict.keys())):
+		postings_list[i] = sorted(dict[key])
+		dict[key] = i
+	
+	with open('dictionary.txt', 'w') as f:
+		f.write(str(dict))
+	with open('postings_list.txt', 'w') as f:
+		f.write(str(postings_list))
+
+
+			
 if __name__ == "__main__":
 	go()
