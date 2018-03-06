@@ -1,6 +1,7 @@
 import os
 import re
 from PorterStemmer import PorterStemmer
+from bs4 import BeautifulSoup
 
 dict = {}
 
@@ -15,11 +16,9 @@ def go():
             with open(filename, 'r') as f:
                 data = f.read()
 
-            tree = ET.parse(filename)
-            root = tree.getroot()
+            soup = BeautifulSoup(data, 'html.parser')
 
-            for news_article in root.findall('reuters').text:
-
+            for news_article in soup.find_all('reuters'):
                 doc_id = int(news_article.get('newid'))
                 news_text = ''
 
@@ -64,18 +63,30 @@ def stem(word):
     return p.stem(word, 0, len(word) - 1).encode('utf8')
 
 
+
 # {'towel': 42} --> { '42':{ 1:[3,5], 4:[5,9],..}, ... }
 def create_index_files():
-    postings_list = {}
-    for i, key in enumerate(sorted(dict.keys())):
-        postings_list[i] = dict[key]
-        dict[key] = i
 
-    with open('x.txt', 'w') as f:
-        f.write(str(dict))
-    with open('y.txt', 'w') as f:
-        f.write(str(postings_list))
 
+
+    with open('inverted_index.txt', 'w') as f:
+        for i, key in enumerate(sorted(dict)):
+            f.write(str( (i,dict[key]) )+'\n')
+            dict[key] = i
+
+    with open('dictionary.txt', 'w') as f:
+        f.write( str(dict) )
+
+
+
+
+def read_line(line_number):
+    with open('inverted_index.txt', 'r') as f:
+        for i, line in enumerate(f):
+            if i == line_number :
+                print type(line), line
+                t = eval(line)
+                print type(list(t)[1])
 
 if __name__ == "__main__":
     go()

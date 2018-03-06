@@ -2,3 +2,8 @@
 
 Dataset/
 reuters21578.zip
+bs4
+build
+dist
+main.spec
+search.spec
