@@ -20,13 +20,13 @@ class Preprocessor(object):
     # {'towel': 42} --> { '42':{ 1:[3,5], 4:[5,9],..}, ... }
     def create_index_files(self):
         with open('inverted_index.txt', 'w') as f:
-            # dictionary value of a token will be the line number in the index for that token
+            # dictionary value of a token will be the line number in the index
             # we will just read the necessary line and have super fast search
-            for i, key in enumerate(sorted(self.dict)):
-                # f.write(str( (i,dict[key]) )+'\n')
+            for i, key in enumerate( sorted(self.dict) ):
+                f.write( str( self.dict[key] )+'\n' )
                 self.dict[key] = i
 
-        with open('dict.txt', 'w') as f:
+        with open('dictionary.txt', 'w') as f:
             f.write( str(self.dict) )
 
 
@@ -55,8 +55,8 @@ class Preprocessor(object):
 
         # remove stopwords, stem tokens, add tokens to dictionary
         for position, word in enumerate(word_list):
-            if word not in self.stopwords:
-                token = self.stem(word)
+            token = self.stem(word)
+            if token not in self.stopwords:
                 self.update_dict(token, doc_id, position)
 
 
