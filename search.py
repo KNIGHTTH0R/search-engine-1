@@ -4,15 +4,13 @@ import re
 class SearchEngine(object):
 
     def __init__(self):
-        self.dictionary = None
-        self.read_dictionary()
+        self.dictionary = self.read_dictionary('dict.txt')
 
 
-    def read_dictionary(self):
-        f = open('dictionary.txt', 'r')
-        data = f.read()
-        self.dictionary = eval(data)
-        f.close()
+    def read_dictionary(self,filename):
+        with open(filename, 'r') as f:
+            data = f.read()
+        return eval(data)
 
 
     def read_line(self,line_number):
@@ -45,9 +43,7 @@ class SearchEngine(object):
         for term in terms:
             if term in self.dictionary:
                 token_id = self.dictionary[term]
-                #
-                index[token_id] = self.read_line(token_id)
-        # { token1_id : {doc_id : [postings], ..}, token2_id : ... }
+                index[term] = self.read_line(token_id)
         return index
 
 
@@ -66,8 +62,9 @@ class SearchEngine(object):
         query_type = int(query[0])
         search_terms = query[1:]
 
+        # { token1 : {doc_id : [postings], ..}, token2 : ... }
         inverted_index = self.get_index(search_terms)
-
+        print inverted_index
         postings_lists = []
         for token_id in inverted_index:
              # doc_ids will be a list
@@ -75,12 +72,6 @@ class SearchEngine(object):
              postings_lists.append(doc_ids)
 
         intersections = self.intersect_lists(postings_lists)
-
-        print query
-        print search_terms
-        print postings_lists
-
-        # {'towel': 42, '':..} --> { '42':{ 1:[3,5], .. }, ... }
 
         if query_type == 1:
             answer = intersections
@@ -91,7 +82,8 @@ class SearchEngine(object):
 
             for doc_id in intersections:
                 positional_index = []
-                for token_id in inverted_index:
+
+                for token in inverted_index:
                     positional_index[doc_id] = inverted_index[token_id][doc_id]
 
                     self.positional_intersect(positional_index, distances, doc_id)
@@ -105,7 +97,6 @@ class SearchEngine(object):
             answer = 'incorrect input'
 
         return answer
-
 
 
 def go():
