@@ -48,6 +48,7 @@ class SearchEngine(object):
 
             i += 1
 
+        print 'answer', answer
         return answer
 
 
@@ -117,6 +118,9 @@ class SearchEngine(object):
     def preprocess(self, query):
         p = PorterStemmer()
         result = []
+
+        # remove any non-alphanumeric characters [a-zA-Z0-9_]
+        query = re.sub("[^\w]", " ", query)
         query = query.lower().split(' ')
         for word in query:
             if word not in self.stopwords:
